@@ -1233,16 +1233,26 @@ public class CalciteSqlCompilerTest {
         pinotQuery.getSelectList().get(2).getFunctionCall().getOperands().get(0).getIdentifier().getName(), "C1");
     Assert.assertEquals(
         pinotQuery.getSelectList().get(2).getFunctionCall().getOperands().get(1).getIdentifier().getName(), "C2");
+  }
 
-    // Invalid groupBy clause shouldn't contain aggregate expression, like sum(rsvp_count), count(*).
-    try {
-      sql = "SELECT C1 AS ALIAS_C1, C2 AS ALIAS_C2, ADD(alias_c1, alias_c2) FROM Foo";
-      CalciteSqlParser.compileToPinotQuery(sql);
-      Assert.fail("Query should have failed compilation");
-    } catch (Exception e) {
-      Assert.assertTrue(e instanceof SqlCompilationException);
-      Assert.assertTrue(e.getMessage().contains("cannot be referred in SELECT Clause"));
-    }
+  @Test
+  public void testSameAliasInSelection() {
+    String sql;
+    PinotQuery pinotQuery;
+    sql = "SELECT C1 AS C1, C2 AS C2 FROM Foo";
+    pinotQuery = CalciteSqlParser.compileToPinotQuery(sql);
+    Assert.assertEquals(pinotQuery.getSelectListSize(), 2);
+    Assert.assertEquals(pinotQuery.getSelectList().get(0).getFunctionCall().getOperator(), SqlKind.AS.toString());
+    Assert.assertEquals(
+        pinotQuery.getSelectList().get(0).getFunctionCall().getOperands().get(0).getIdentifier().getName(), "C1");
+    Assert.assertEquals(
+        pinotQuery.getSelectList().get(0).getFunctionCall().getOperands().get(1).getIdentifier().getName(), "C1");
+
+    Assert.assertEquals(pinotQuery.getSelectList().get(1).getFunctionCall().getOperator(), SqlKind.AS.toString());
+    Assert.assertEquals(
+        pinotQuery.getSelectList().get(1).getFunctionCall().getOperands().get(0).getIdentifier().getName(), "C2");
+    Assert.assertEquals(
+        pinotQuery.getSelectList().get(1).getFunctionCall().getOperands().get(1).getIdentifier().getName(), "C2");
   }
 
   @Test

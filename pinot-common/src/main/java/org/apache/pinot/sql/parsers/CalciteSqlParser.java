@@ -113,32 +113,11 @@ public class CalciteSqlParser {
     // Sanity check on selection expression shouldn't use alias reference.
     Set<String> aliasKeys = new HashSet<>();
     for (Identifier identifier : aliasMap.keySet()) {
-      aliasKeys.add(identifier.getName().toLowerCase());
-    }
-    for (Expression selectExpr : pinotQuery.getSelectList()) {
-      matchIdentifierInAliasMap(selectExpr, aliasKeys);
-    }
-  }
-
-  private static void matchIdentifierInAliasMap(Expression selectExpr, Set<String> aliasKeys)
-      throws SqlCompilationException {
-    Function functionCall = selectExpr.getFunctionCall();
-    if (functionCall != null) {
-      if (functionCall.getOperator().equalsIgnoreCase(SqlKind.AS.toString())) {
-        matchIdentifierInAliasMap(functionCall.getOperands().get(0), aliasKeys);
-      } else {
-        if (functionCall.getOperandsSize() > 0) {
-          for (Expression operand : functionCall.getOperands()) {
-            matchIdentifierInAliasMap(operand, aliasKeys);
-          }
-        }
+      String aliasName = identifier.getName().toLowerCase();
+      if (aliasKeys.contains(aliasName)) {
+        throw new SqlCompilationException("Duplicated alias name found.");
       }
-    }
-    if (selectExpr.getIdentifier() != null) {
-      if (aliasKeys.contains(selectExpr.getIdentifier().getName().toLowerCase())) {
-        throw new SqlCompilationException(
-            "Alias " + selectExpr.getIdentifier().getName() + " cannot be referred in SELECT Clause");
-      }
+      aliasKeys.add(aliasName);
     }
   }
 
