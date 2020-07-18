@@ -113,6 +113,7 @@ public class PinotTableRestletResource {
     try {
       tableConfig = JsonUtils.stringToObject(tableConfigStr, TableConfig.class);
       TableConfigUtils.validate(tableConfig);
+      TableConfigUtils.validateTableName(tableConfig);
     } catch (Exception e) {
       throw new ControllerApplicationException(LOGGER, e.getMessage(), Response.Status.BAD_REQUEST, e);
     }
